@@ -34,9 +34,9 @@ void scanner::start()
         {
             break;
         }
-        string tk = token(texto);
+        string tk = token(texto); // mkdisk
         texto.erase(0,tk.length()+1);
-        vector<string> tks = split_tokens(texto);
+        vector<string> tks = split_tokens(texto); //[-size=10, -u=m, -path=/home/hola.dk]
         functions(tk, tks);
         std::cout << "\nPresione Enter para continuar...." << std::endl;
         getline(cin,texto);
@@ -54,44 +54,41 @@ void scanner::functions(string token, vector<string> tks)
     if (compare(token, "MKDISK"))
     {
         std::cout << "**********MKDISK**********" << std::endl;
-        disco.mkdisk(tks);
+        disco.mkdisk(tks); // [-size=10, -u=m, -path=/home/hola.dk]
     }else if(compare(token, "RMDISK")){
         std::cout << "*********RMDISK***********" << std::endl;
         disco.rmdisk(tks);
+    }else if(compare(token, "FDISK")){
+        std::cout << "*********FDISK***********" << std::endl;
+        disco.fdisk(tks);
     }else if(compare(token.substr(0,1),"#")){
         respuesta("COMENTARIO",token);
     }else{
         errores("SYSTEM","El comando ingresado no se reconoce en el sistema \""+token+"\"");
     }
-    
 }
 
 string scanner::token(string text)
 {
     string tkn = "";
     bool terminar = false;
-    for (char &c : text)
-    {
+    for (char &c : text){
         if (terminar)
         {
-            if (c == ' ' || c == '-')
-            {
+            if (c == ' ' || c == '-'){
                 break;
             }
-
             tkn += c;
         }
         else if ((c != ' ' && !terminar))
         {
-            if (c=='#')
-            {
+            if (c=='#'){
                 tkn=text;
                 break;
             }else{
                 tkn += c;
                 terminar = true;
             }
-            
         }
     }
     return tkn;
@@ -189,12 +186,12 @@ bool scanner::compare(string a, string b){
 
 void scanner::errores(string operacion, string mensaje){
     
-    cout << "\033[1;41m Error\033"<< "\033[0;31m(" + operacion + ")--> \033[0m"<< mensaje << endl;
+    cout << "\033[1;41m Error\033"<< "\033[0;31m(" + operacion + ")~~> \033[0m"<< mensaje << endl;
 }
 
 void scanner::respuesta(string operacion, string mensaje){
     
-    cout << "\033[0;42m(" + operacion + ")--> \033[0m"<< mensaje << endl;
+    cout << "\033[0;42m(" + operacion + ")~~> \033[0m"<< mensaje << endl;
 }
 
 bool scanner::confirmar(string mensaje){
@@ -211,7 +208,6 @@ bool scanner::confirmar(string mensaje){
 
 void scanner::funcion_excec(vector<string> tokens){
     string path = "";
-    bool error = false;
     for (string token:tokens)
     {
         string tk = token.substr(0, token.find("="));
@@ -230,7 +226,7 @@ void scanner::funcion_excec(vector<string> tokens){
 }
 
 void scanner::excec(string path){
-        fstream archivo;
+    fstream archivo;
     string linea;
     if (!archivo.is_open())
     {

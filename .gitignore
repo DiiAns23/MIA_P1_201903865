@@ -1,6 +1,5 @@
-//Archivos y Carpetas que sirven para la compilacion y ejecucion del programa
-//Se debe de correr el archivo main.cpp
 .idea
 .vscode
 bin
 Makefile
+//sudo snap install --classic code
