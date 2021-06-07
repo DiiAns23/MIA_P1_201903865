@@ -1,5 +1,6 @@
 #include "../lib/scanner.h"
 #include "../lib/disco.h"
+#include "../lib/mount.h"
 #include <iostream>
 #include <stdlib.h>
 #include <locale>
@@ -11,6 +12,7 @@
 using namespace std;
 
 Disk disco;
+Mount mount;
 scanner::scanner()
 {
 }
@@ -44,7 +46,6 @@ void scanner::start()
         std::cout << "------------------------------INGRESE UN COMANDO------------------------------\n" << std::endl;
         std::cout << "--------------------------------exit para salir-------------------------------\n" << std::endl;
         std::cout << ">>";
-
     }
     
 }
@@ -61,6 +62,9 @@ void scanner::functions(string token, vector<string> tks)
     }else if(compare(token, "FDISK")){
         std::cout << "*********FDISK***********" << std::endl;
         disco.fdisk(tks);
+    }else if(compare(token, "MOUNT")){
+        std::cout << "*********MOUNT***********" << std::endl;
+        mount.mount(tks);
     }else if(compare(token.substr(0,1),"#")){
         respuesta("COMENTARIO",token);
     }else{

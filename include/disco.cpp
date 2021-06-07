@@ -14,7 +14,6 @@ scanner scan;
 int startValue;
 
 Disk::Disk(){
-
 }
 
 void Disk::mkdisk(vector<string> tokens)
