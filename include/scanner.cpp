@@ -1,6 +1,7 @@
 #include "../lib/scanner.h"
 #include "../lib/disco.h"
 #include "../lib/mount.h"
+#include "../lib/filesystem.h"
 #include <iostream>
 #include <stdlib.h>
 #include <locale>
@@ -13,6 +14,7 @@ using namespace std;
 
 Disk disco;
 Mount mount;
+
 scanner::scanner()
 {
 }
@@ -24,29 +26,67 @@ void Clear()
 void scanner::start()
 {
     system("clear");
-    std::cout << "------------------------------INGRESE UN COMANDO------------------------------\n" << std::endl;
-    std::cout << "--------------------------------exit para salir-------------------------------\n" << std::endl;
-    std::cout << ">>";
-    while (true)
+    std::cout << "1. Ingresar Comando" << std:: endl;
+    std::cout << "2. Leer Archivo" << std::endl;
+    string resp;
+    getline(cin,resp);
+    if(resp=="1")
     {
-        string texto;
-        getline(cin, texto);
-        Clear();
-        if (compare(texto, "exit"))
-        {
-            break;
-        }
-        string tk = token(texto); // mkdisk
-        texto.erase(0,tk.length()+1);
-        vector<string> tks = split_tokens(texto); //[-size=10, -u=m, -path=/home/hola.dk]
-        functions(tk, tks);
-        std::cout << "\nPresione Enter para continuar...." << std::endl;
-        getline(cin,texto);
-        Clear();
         std::cout << "------------------------------INGRESE UN COMANDO------------------------------\n" << std::endl;
         std::cout << "--------------------------------exit para salir-------------------------------\n" << std::endl;
         std::cout << ">>";
+        while (true)
+        {
+            string texto;
+            getline(cin, texto);
+            Clear();
+            if (compare(texto, "exit"))
+            {
+                break;
+            }
+            string tk = token(texto); // mkdisk
+            texto.erase(0,tk.length()+1);
+            vector<string> tks = split_tokens(texto); //[-size=10, -u=m, -path=/home/hola.dk]
+            functions(tk, tks);
+            std::cout << "\nPresione Enter para continuar...." << std::endl;
+            getline(cin,texto);
+            Clear();
+            std::cout << "------------------------------INGRESE UN COMANDO------------------------------\n" << std::endl;
+            std::cout << "--------------------------------exit para salir-------------------------------\n" << std::endl;
+            std::cout << ">>";
+        }
+    }else if(resp=="2")
+    {
+        string filename("Entrada.txt");
+        vector<string> lines;
+        string line;
+
+        ifstream input_file(filename);
+        if (!input_file.is_open()) {
+            cerr << "Could not open the file - '"
+                << filename << "'" << endl;
+            return;
+        }
+
+        while (getline(input_file, line)){
+            lines.push_back(line);
+        }
+
+        for (const auto &i : lines)
+        {
+            if(i!=""){
+                string texto = i;
+                string tk = token(texto); // mkdisk
+                texto.erase(0,tk.length()+1);
+                vector<string> tks = split_tokens(texto); //[-size=10, -u=m, -path=/home/hola.dk]
+                functions(tk, tks);
+            }
+        }
+
+        input_file.close();
+        return;
     }
+    
     
 }
 
@@ -65,6 +105,14 @@ void scanner::functions(string token, vector<string> tks)
     }else if(compare(token, "MOUNT")){
         std::cout << "*********MOUNT***********" << std::endl;
         mount.mount(tks);
+    }else if(compare(token, "UNMOUNT")){
+        std::cout << "*********UNMOUNT***********" << std::endl;
+        mount.unmount(tks);
+    }else if(compare(token, "MKFS")){
+        std::cout << "*********MKFS***********" << std::endl;
+        FileSystem fileSystem = FileSystem(mount);
+        fileSystem.mkfs(tks);
+
     }else if(compare(token.substr(0,1),"#")){
         respuesta("COMENTARIO",token);
     }else{

@@ -13,12 +13,12 @@ public:
     Structs();
 
     typedef struct _Partition {
-        char part_status = '0';
-        char part_type;
-        char part_fit;
-        int part_start = -1;
-        int part_size = 0;
-        char part_name[16];
+        char part_status = '0'; // 0 no usado. 1 ya esta en uso
+        char part_type;  // P, E, L
+        char part_fit; // configuracion wf, bf, ff
+        int part_start = -1; //
+        int part_size = 0; //
+        char part_name[16]; //nombre maximo de 16 char
     } Partition;
 
     typedef struct _MBR
@@ -27,11 +27,13 @@ public:
         char mbr_fecha_creacion[20];
         int mbr_disk_signature;
         char disk_fit;
-        Partition mbr_Partition_1;
+        Partition mbr_Partition_1; //{status, type, fit, start, size, name}
         Partition mbr_Partition_2;
         Partition mbr_Partition_3;
-        Partition mbr_Partition_4;
+        Partition mbr_Partition_4;// n logicas
     } MBR;
+
+    
 
     typedef struct _EBR {
         char part_status = '0';
