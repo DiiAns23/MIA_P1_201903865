@@ -5,6 +5,7 @@
 #define STRUCTS_H
 
 #include <string>
+#include <ctime>
 
 using namespace std;
 
@@ -24,7 +25,9 @@ public:
     typedef struct _MBR
     {
         int mbr_tamano;
-        char mbr_fecha_creacion[20];
+
+        //char mbr_fecha_creacion[20];
+        time_t mbr_fecha_creacion;
         int mbr_disk_signature;
         char disk_fit;
         Partition mbr_Partition_1; //{status, type, fit, start, size, name}
@@ -62,7 +65,8 @@ public:
         int s_blocks_count;
         int s_free_blocks_count;
         int s_free_inodes_count;
-        char s_mtime[20];
+        time_t s_mtime;
+        
         char s_umtime[20];
         int s_mnt_count;
         int s_magic = 0xEF53;

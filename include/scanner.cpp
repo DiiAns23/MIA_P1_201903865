@@ -1,6 +1,7 @@
 #include "../lib/scanner.h"
 #include "../lib/disco.h"
 #include "../lib/mount.h"
+#include "../lib/report.h"
 #include "../lib/filesystem.h"
 #include <iostream>
 #include <stdlib.h>
@@ -14,7 +15,7 @@ using namespace std;
 
 Disk disco;
 Mount mount;
-
+Report report;
 scanner::scanner()
 {
 }
@@ -113,6 +114,9 @@ void scanner::functions(string token, vector<string> tks)
         FileSystem fileSystem = FileSystem(mount);
         fileSystem.mkfs(tks);
 
+    }else if(compare(token, "REP")){
+        std::cout << "*********REPORTES***********" << std::endl;
+        report.generar(tks, mount);
     }else if(compare(token.substr(0,1),"#")){
         respuesta("COMENTARIO",token);
     }else{

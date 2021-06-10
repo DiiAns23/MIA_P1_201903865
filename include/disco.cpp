@@ -113,14 +113,13 @@ void Disk::makeDisk(string s, string f, string u, string path){
             size = 1024*size;
         }
         f = f.substr(0,1);
-        time_t t;
-        struct tm *tm;
-        char fechayhora[20];
-        t = time(nullptr);
-        tm = localtime(&t);
-        strftime(fechayhora, 20, "%Y/%m/%d %H:%M:%S", tm);
+        //time_t t = time(0);
+        //char fechayhora[20];
+        //struct tm *tm = localtime(&t);
+        //strftime(fechayhora, 20, "%Y/%m/%d %H:%M:%S", tm);
         disco.mbr_tamano = size;
-        strcpy(disco.mbr_fecha_creacion, fechayhora);
+        //strcpy(disco.mbr_fecha_creacion, fechayhora);
+        disco.mbr_fecha_creacion = time(nullptr);
         disco.disk_fit = toupper(f[0]);
         disco.mbr_disk_signature = rand() % 9999 + 100;
 
@@ -170,10 +169,14 @@ void Disk::makeDisk(string s, string f, string u, string path){
                 Structs::MBR discoI;
                 fseek(imprimir, 0, SEEK_SET);
                 fread(&discoI,sizeof(Structs::MBR), 1,imprimir);
+                struct tm *tm;
+                tm = localtime(&discoI.mbr_fecha_creacion);
+                char mostrar_fecha [20];
+                strftime(mostrar_fecha, 20, "%Y/%m/%d %H:%M:%S", tm);                
                 scan.respuesta("MKDISK","   Disco creado exitosamente");
                 std::cout << "********Nuevo Disco********" << std::endl;
                 std::cout << "Size:  "<< discoI.mbr_tamano << std::endl;
-                std::cout << "Fecha:  "<< discoI.mbr_fecha_creacion << std::endl;
+                std::cout << "Fecha:  "<< mostrar_fecha << std::endl;
                 std::cout << "FIT:  "<< discoI.disk_fit << std::endl;
                 std::cout << "DISK_SIGNATURE:  "<< discoI.mbr_disk_signature << std::endl;
                 cout << "Bits del MBR:  " << sizeof(Structs::MBR) << endl;

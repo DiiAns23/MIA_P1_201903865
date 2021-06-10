@@ -68,7 +68,8 @@ void FileSystem::mkfs(string id, string t, string fs) {
         Structs::Superblock spr;
         spr.s_inodes_count = spr.s_free_inodes_count = n;
         spr.s_blocks_count = spr.s_free_blocks_count = 3 * n;
-        strcpy(spr.s_mtime, datetime);
+        //strcpy(spr.s_mtime, datetime);
+        spr.s_mtime = time(nullptr);
         strcpy(spr.s_umtime, datetime);
         spr.s_mnt_count = 1;
         if (shared.compare(fs, "2fs")) {
