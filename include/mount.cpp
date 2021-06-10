@@ -131,8 +131,77 @@ void Mount::unmount(vector<string> context)
 }
 
 void Mount::unmount(string id){
-    shared.response("UNMOUNT", "Aqui se realizara el desmontar disco");
+    try {
+        if (!(id[0] == '6' && id[1] == '5')) {
+            throw runtime_error("el primer identificador no es válido");
+        }
+        string past = id;
+        char letter = id[id.length() - 1];
+        id.erase(0, 2);
+        id.pop_back();
+        int i = stoi(id) - 1;
+        if (i < 0) {
+            throw runtime_error("identificador de disco inválido");
+        }
+
+        for (int j = 0; j < 26; j++) {
+            if (mounted[i].mpartitions[j].status == '1') {
+                if (mounted[i].mpartitions[j].letter == letter) {
+
+                    MountedPartition mp = MountedPartition();
+                    mounted[i].mpartitions[j] = mp;
+                    shared.response("UNMOUNT", "se ha realizado correctamente el unmount -id=" + past);
+                    return;
+                }
+            }
+        }
+        throw runtime_error("id no existente, no se desmontó nada");
+    }
+    catch (invalid_argument &e) {
+        shared.handler("UNMOUNT", "identificador de disco incorrecto, debe ser entero");
+        return;
+    }
+    catch (exception &e) {
+        shared.handler("UNMOUNT", e.what());
+        return;
+    }
 }
+
+Structs::Partition Mount::getmount(string id, string *p) {
+
+    if (!(id[0] == '8' && id[1] == '7')) {
+        throw runtime_error("el primer identificador no es válido");
+    }
+    string past = id;
+    char letter = id[id.length() - 1];
+    id.erase(0, 2);
+    id.pop_back();
+    int i = stoi(id) - 1;
+    if (i < 0) {
+        throw runtime_error("identificador de disco inválido");
+    }
+
+    for (int j = 0; j < 26; j++) {
+        if (mounted[i].mpartitions[j].status == '1') {
+            if (mounted[i].mpartitions[j].letter == letter) {
+
+                FILE *validate = fopen(mounted[i].path, "r");
+                if (validate == NULL) {
+                    throw runtime_error("disco no existente");
+                }
+
+                Structs::MBR disk;
+                rewind(validate);
+                fread(&disk, sizeof(Structs::MBR), 1, validate);
+                fclose(validate);
+                *p = mounted[i].path;
+                return dsk.findby(disk, mounted[i].mpartitions[j].name, mounted[i].path);
+            }
+        }
+    }
+    throw runtime_error("partición no existente");
+}
+
 void Mount::listmount() {
     cout << "\n SOLO PARA CORROBORRAR LAS MONTADURAS DE PARTICIONES <3" << endl;
     cout << "\n<-------------------------- MOUNTS -------------------------->"
