@@ -1,95 +1,32 @@
+#exec -path=/home/diians_23/entrada.scripts
 #CREACION DE DISCOS
-Mkdisk -size=50 -u=M -path=/home/archivos/Disco1.dk -f=FF
-Mkdisk -u=k -size=51200 -path=/home/archivos/Disco2.dk -f=BF
-mkDisk -size=10 -path=/home/archivos/Disco3.dk
-mkdisk -size=51200 -path="/home/archivos/mis archivos/Disco4.dk" -u=K
-mkDisk -size=20 -path="/home/archivos/mis archivos/Disco5.dk" -u=M -f=WF
-
+mkdisk -size=20 -u=m -path=/home/archivos/Discos/Disco1.dk
+Mkdisk -u=k -size=51200 -path=/home/archivos/Discos/Disco2.dk -f=BF
+mkdisk -size=10 -path=/home/archivos/Discos/Disco3.dk
+mkdisk -size=51200 -path="/home/archivos/Discos/mis archivos/Disco4.dk" -u=K
+mkdisk -size=20 -path="/home/archivos/Discos/mis archivos/Disco5.dk" -u=M -f=WF
 #Deberia dar error
-mkdisk -param=x -size=30 -path=/home/archivos/Disco.dk
+mkdisk -param=x -size=30 -path=/home/archivos/archivos/fase1/Disco.dk
 
 #ELIMINACION DE DISCOS
 #El primero deberia dar error
-rmDisk -path=/home/Disco3.dk
-rmDisk -path=/home/archivos/Disco3.dk
-RMDISK -path="/home/archivos/mis archivos/Disco4.dk"
-
-#CREACION DE PARTICIONES
-#Particiones en el disco1
-fdisk -type=P -u=K -name=Part1 -size=7680 -path=/home/archivos/Disco1.dk -f=BF #7.5 MB
-fdisk -type=E -u=K -name=Part2 -size=7680 -path=/home/archivos/Disco1.dk -f=FF
-fdisk -type=E -u=K -name=Part3 -size=7680 -path=/home/archivos/Disco1.dk -f=WF #Deberia dar error
-fdisk -type=P -u=K -name=Part3 -size=7680 -path=/home/archivos/Disco1.dk -f=WF
-fdisk -type=P -u=K -name=Part4 -size=7680 -path=/home/archivos/Disco1.dk -f=BF
-FDISK -type=L -u=k -name=Part5 -size=1280 -path=/home/archivos/Disco1.dk -f=BF #1.25 MB
-fdisk -type=L -u=K -name=Part6 -size=1280 -path=/home/archivos/Disco1.dk -f=WF
-fdisk -type=L -u=K -name=Part7 -size=1280 -path=/home/archivos/Disco1.dk -f=wf
-fdisk -type=L -u=K -name=Part8 -size=1280 -path=/home/archivos/Disco1.dk -f=ff
-fdisk -type=L -u=K -name=Part9 -size=1280 -path=/home/archivos/Disco1.dk -f=bf
-fdisk -type=L -u=K -name=Part9 -size=1024 -path=/home/archivos/Disco1.dk -f=BF #ERROR nombre 
-
-#Particiones en el disco2
-fdisk -type=L -u=k -name=Part11 -size=10240 -path=/home/archivos/Disco2.dk -f=BF #ERRROR no hay una extendida
-fdisk -type=L -u=k -name=Part12 -size=10240 -path=/home/archivos/Disco2.dk -f=BF #ERRROR no hay una extendida
-fDisk -type=P -u=K -name=Part11 -size=10240 -path=/home/archivos/Disco2.dk -f=BF #10 MB
-fDisk -type=P -u=m -name=Part12 -size=5 -path=/home/archivos/Disco2.dk -f=FF #5MB
-fDisk -type=P -u=K -name=Part13 -size=5120 -path=/home/archivos/Disco2.dk -f=WF #5 MB
-fdisk -type=E -u=m -name=Part14 -size=20 -path=/home/archivos/Disco2.dk #20 MB
-fdisk -type=L -u=k -name=Part15 -size=1536 -path=/home/archivos/Disco2.dk #1.5 MB
-fdisk -type=L -u=k -name=Part16 -size=1536 -path=/home/archivos/Disco2.dk -f=BF
-fdisk -type=L -u=k -name=Part17 -size=1536 -path=/home/archivos/Disco2.dk -f=FF
-fdisk -type=L -u=k -name=Part18 -size=1536 -path=/home/archivos/Disco2.dk -f=BF
-fdisk -type=L -u=k -name=Part19 -size=1536 -path=/home/archivos/Disco2.dk -f=WF
-fdisk -type=L -u=k -name=Part20 -size=1536 -path=/home/archivos/Disco2.dk -f=BF
-fdisk -type=L -u=k -name=Part21 -size=1536 -path=/home/archivos/Disco2.dk -f=FF
-fdisk -type=L -u=k -name=Part22 -size=1536 -path=/home/archivos/Disco2.dk -f=BF
-fdisk -type=L -u=k -name=Part23 -size=1536 -path=/home/archivos/Disco2.dk -f=FF
-fdisk -type=L -u=k -name=Part24 -size=1536 -path=/home/archivos/Disco2.dk -f=BF
-fdisk -type=L -u=k -name=Part25 -size=1536 -path=/home/archivos/Disco2.dk -f=wF
-fdisk -type=L -u=k -name=Part26 -size=1536 -path=/home/archivos/Disco2.dk -f=BF
-fdisk -type=L -u=k -name=Part27 -size=1536 -path=/home/archivos/Disco2.dk -f=FF
+rmdisk -path=/home/archivos/Disco3.dk
+rmdisk -path=/home/archivos/Discos/Disco3.dk
+RMdisk -path="/home/archivos/Discos/mis archivos/Disco4.dk"
 
 
-#Particiones en el disco 5
-fdisk -type=E -u=k -name=Part30 -size=5120 -path="/home/archivos/mis archivos/Disco5.dk" -f=BF #5MB
-fdisk -type=L -u=k -name=Part31 -size=1024 -path="/home/archivos/mis archivos/Disco5.dk" -f=BF
-fdisk -type=P -u=k -name=Part32 -size=5120 -path="/home/archivos/mis archivos/Disco5.dk" -f=BF
-fdisk -type=L -u=k -name=Part33 -size=1024 -path="/home/archivos/mis archivos/Disco5.dk" -f=BF
-fdisk -type=P -u=k -name=Part34 -size=5120 -path="/home/archivos/mis archivos/Disco5.dk" -f=BF
-fdisk -type=L -u=k -name=Part36 -size=1024 -path="/home/archivos/mis archivos/Disco5.dk" -f=BF
-fdisk -type=L -u=k -name=Part37 -size=1024 -path="/home/archivos/mis archivos/Disco5.dk" -f=BF
+#CREACION DE PARTICION
+fdisk -type=P -u=K -name=Part1 -size=7680 -path=/home/archivos/Discos/Disco1.dk -f=BF
+#MOUNT
+mount -path=/home/archivos/Discos/Disco1.dk -name=Part1 #581a
+#CREACION DE SISTEMA DE ARCHIVOS
+mkfs -type=fast -id=581a -fs=3fs
 
-#Eliminar particiones disco1
-fdisk -delete=fast -name=Part1 -path=/home/archivos/Disco1.dk
-fdisk -delete=fast -name=Part6 -path=/home/archivos/Disco1.dk
-fdisk -delete=fast -name=Part10 -path=/home/archivos/Disco1.dk
-fdisk -delete=fast -name=Part9 -path=/home/archivos/Disco1.dk
-#Agregando espacio
-fdisk -add=500 -u=K -path=/home/archivos/Disco1.dk -name=Part4
+#------------------------REPORTES 1----------------
+#rep -id=581a -path="/home/archivos/reportes/reporte1_sb.jpg" -name=sb
+#rep -id=581a -path="/home/archivos/reportes/reporte1_tree.jpg" -name=tree
+#pause
 
-#Eliminadndo y agregando espacio disco2
-fdisk -delete=fast -name=Part13 -path=/home/archivos/Disco2.dk
-fdisk -add=1 -u=m -path=/home/archivos/Disco2.dk -name=Part12
-
-#MONTAR PARTICIONES
-mount -path=/home/archivos/Disco3.dk -name=Part3 #ERROR no existe
-mount -path=/home/archivos/Disco1.dk -name=Part2 #58a1
-mount -path=/home/archivos/Disco1.dk -name=Part3 #58a2
-mount -path=/home/archivos/Disco1.dk -name=Part4 #58a3
-mount -path=/home/archivos/Disco1.dk -name=Part5 #58a4
-mount -path=/home/archivos/Disco1.dk -name=Part7 #58a5
-mount -path=/home/archivos/Disco2.dk -name=Part14 #58b1
-mount -path=/home/archivos/Disco2.dk -name=Part15 #58b2
-mount -path=/home/archivos/Disco2.dk -name=Part16 #58b3
-mount -path=/home/archivos/Disco2.dk -name=Part17 #58b4
-mount -path="/home/archivos/mis archivos/Disco5.dk" -name=Part30 #58c1
-mount -path="/home/archivos/mis archivos/Disco5.dk" -name=Part31 #58c2
-mount -path="/home/archivos/mis archivos/Disco5.dk" -name=Part32 #58c3
-
-#DESMONTAR PARTICIONES
-unmount -id=653a
-unmount -id=655a
-unmount -id=654b
-unmount -id=652c
-unmount -id=65x1 #ERROR
+#LOGIN
+login -usr=root -pwd=123 -id=651a
 

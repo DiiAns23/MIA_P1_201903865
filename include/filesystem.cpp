@@ -59,17 +59,11 @@ void FileSystem::mkfs(string id, string t, string fs) {
                 floor((partition.part_size - sizeof(Structs::Superblock)) /
                       (4 + sizeof(Structs::Inodes) + 3 * sizeof(Structs::Fileblock) + sizeof(Structs::Journaling)));
 
-        char datetime[20];
-
-        time_t t = time(0);
-        struct tm *tm = localtime(&t);
-        strftime(datetime, 20, "%d/%m/%Y %H:%M:%S", tm);
-
         Structs::Superblock spr;
         spr.s_inodes_count = spr.s_free_inodes_count = n;
         spr.s_blocks_count = spr.s_free_blocks_count = 3 * n;
-        strcpy(spr.s_mtime, datetime);
-        strcpy(spr.s_umtime, datetime);
+        spr.s_mtime = time(nullptr);
+        spr.s_umtime = time(nullptr);
         spr.s_mnt_count = 1;
         if (shared.compare(fs, "2fs")) {
             spr.s_filesystem_type = 2;
@@ -131,22 +125,14 @@ void FileSystem::ext2(Structs::Superblock spr, Structs::Partition p, int n, stri
     fseek(archivo, p.part_start, SEEK_SET);
     fread(&recuperado, sizeof(Structs::Superblock), 1, archivo);
     fclose(archivo);
-//    cout << endl;
-//    cout << "Tipo de sistema: " << recuperado.s_filesystem_type << endl;
-//    cout << "Numero de inodos: " << recuperado.s_inodes_count << endl;
-//    cout << "Numero de bloques: " << recuperado.s_blocks_count << endl;
-//    cout << "Fecha montado: " << recuperado.s_mtime << endl;
-//    cout << "inicio de los bloques " << recuperado.s_block_start << endl;
-//    cout << "inicio de los bloques " << n << endl;
-//    cout << endl;
 
-    inode.i_uid = 1;
-    inode.i_gid = 1;
+    inode.i_uid = 0;
+    inode.i_gid = 0;
     inode.i_size = 0;
-    strcpy(inode.i_atime, spr.s_umtime);
-    strcpy(inode.i_ctime, spr.s_umtime);
-    strcpy(inode.i_mtime, spr.s_umtime);
-    inode.i_type = 0;
+    inode.i_atime= spr.s_umtime;
+    inode.i_ctime= spr.s_umtime;
+    inode.i_mtime= spr.s_umtime;
+    inode.i_type = 1;
     inode.i_perm = 664;
     inode.i_block[0] = 0;
 
@@ -163,10 +149,10 @@ void FileSystem::ext2(Structs::Superblock spr, Structs::Partition p, int n, stri
     inodetmp.i_uid = 1;
     inodetmp.i_gid = 1;
     inodetmp.i_size = sizeof(data.c_str()) + sizeof(Structs::Folderblock);
-    strcpy(inodetmp.i_atime, spr.s_umtime);
-    strcpy(inodetmp.i_ctime, spr.s_umtime);
-    strcpy(inodetmp.i_mtime, spr.s_umtime);
-    inodetmp.i_type = 1;
+    inodetmp.i_atime = spr.s_umtime;
+    inodetmp.i_ctime = spr.s_umtime;
+    inodetmp.i_mtime = spr.s_umtime;
+    inodetmp.i_type = 0;
     inodetmp.i_perm = 664;
     inodetmp.i_block[0] = 1;
 
@@ -240,21 +226,21 @@ void FileSystem::ext3(Structs::Superblock spr, Structs::Partition p, int n, stri
     fread(&recuperado, sizeof(Structs::Superblock), 1, archivo);
     fclose(archivo);
 
-    inode.i_uid = 1;
-    inode.i_gid = 1;
+    inode.i_uid = 0;
+    inode.i_gid = 0;
     inode.i_size = 0;
-    strcpy(inode.i_atime, spr.s_umtime);
-    strcpy(inode.i_ctime, spr.s_umtime);
-    strcpy(inode.i_mtime, spr.s_umtime);
-    inode.i_type = 0;
+    inode.i_atime = spr.s_umtime;
+    inode.i_ctime = spr.s_umtime;
+    inode.i_mtime = spr.s_umtime;
+    inode.i_type = 1;
     inode.i_perm = 664;
     inode.i_block[0] = 0;
 
     strcpy(journaling.content, "carpeta base");
     strcpy(journaling.path, "/");
-    journaling.type = 0;
+    journaling.type = 1;
     strcpy(journaling.operation, "mkdir");
-    strcpy(journaling.date, spr.s_umtime);
+    journaling.date = spr.s_umtime;
 
     Structs::Folderblock fb;
     strcpy(fb.b_content[0].b_name, ".");
@@ -269,10 +255,10 @@ void FileSystem::ext3(Structs::Superblock spr, Structs::Partition p, int n, stri
     inodetmp.i_uid = 1;
     inodetmp.i_gid = 1;
     inodetmp.i_size = sizeof(data.c_str()) + sizeof(Structs::Folderblock);
-    strcpy(inodetmp.i_atime, spr.s_umtime);
-    strcpy(inodetmp.i_ctime, spr.s_umtime);
-    strcpy(inodetmp.i_mtime, spr.s_umtime);
-    inodetmp.i_type = 1;
+    inodetmp.i_atime = spr.s_umtime;
+    inodetmp.i_ctime = spr.s_umtime;
+    inodetmp.i_mtime = spr.s_umtime;
+    inodetmp.i_type = 0;
     inodetmp.i_perm = 664;
     inodetmp.i_block[0] = 1;
 
@@ -281,17 +267,17 @@ void FileSystem::ext3(Structs::Superblock spr, Structs::Partition p, int n, stri
     Structs::Journaling joutmp;
     strcpy(joutmp.content, data.c_str());
     strcpy(joutmp.path, "/user.txt");
-    joutmp.type = 1;
+    joutmp.type = 0;
     joutmp.size = sizeof(data) + sizeof(Structs::Folderblock);
     strcpy(joutmp.operation, "mkfl");
-    strcpy(joutmp.date, spr.s_umtime);
+    joutmp.date = spr.s_umtime;
 
     Structs::Fileblock fileb;
     strcpy(fileb.b_content, data.c_str());
 
     FILE *bfiles = fopen(path.c_str(), "rb+");
 
-    fseek(bfiles, p.part_status+ sizeof(Structs::Superblock), SEEK_SET);
+    fseek(bfiles, p.part_start+ sizeof(Structs::Superblock), SEEK_SET);
     fwrite(&journaling, sizeof(Structs::Journaling), 1, bfiles);
     fwrite(&joutmp, sizeof(Structs::Journaling), 1, bfiles);
 

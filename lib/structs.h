@@ -5,6 +5,7 @@
 #define STRUCTS_H
 
 #include <string>
+#include <ctime>
 
 using namespace std;
 
@@ -24,7 +25,7 @@ public:
     typedef struct _MBR
     {
         int mbr_tamano;
-        char mbr_fecha_creacion[20];
+        time_t mbr_fecha_creacion;
         int mbr_disk_signature;
         char disk_fit;
         Partition mbr_Partition_1; //{status, type, fit, start, size, name}
@@ -32,8 +33,6 @@ public:
         Partition mbr_Partition_3;
         Partition mbr_Partition_4;// n logicas
     } MBR;
-
-    
 
     typedef struct _EBR {
         char part_status = '0';
@@ -48,9 +47,9 @@ public:
         int i_uid = -1;
         int i_gid = -1;
         int i_size = -1;
-        char i_atime[20];
-        char i_ctime[20];
-        char i_mtime[20];
+        time_t i_atime;
+        time_t i_ctime;
+        time_t i_mtime;
         int i_block[15] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
         char i_type = -1;
         int i_perm = -1;
@@ -62,8 +61,8 @@ public:
         int s_blocks_count;
         int s_free_blocks_count;
         int s_free_inodes_count;
-        char s_mtime[20];
-        char s_umtime[20];
+        time_t s_mtime;
+        time_t s_umtime;
         int s_mnt_count;
         int s_magic = 0xEF53;
         int s_inode_size = sizeof(Inodes);
@@ -101,7 +100,7 @@ public:
         char type = -1;
         char path[100] = "";
         char content[60] = "";
-        char date[20] = "";
+        time_t date;
         int size = 0;
     } Journaling;
 };

@@ -1,7 +1,10 @@
 #include "../lib/scanner.h"
 #include "../lib/disco.h"
 #include "../lib/mount.h"
+#include "../lib/report.h"
 #include "../lib/filesystem.h"
+#include "../lib/users.h"
+#include "../lib/filemanager.h"
 #include <iostream>
 #include <stdlib.h>
 #include <locale>
@@ -14,7 +17,11 @@ using namespace std;
 
 Disk disco;
 Mount mount;
-
+Report report;
+Users user;
+Shared shared;
+FileManager filemanager;
+bool logued = false;
 scanner::scanner()
 {
 }
@@ -26,12 +33,6 @@ void Clear()
 void scanner::start()
 {
     system("clear");
-    std::cout << "1. Ingresar Comando" << std:: endl;
-    std::cout << "2. Leer Archivo" << std::endl;
-    string resp;
-    getline(cin,resp);
-    if(resp=="1")
-    {
         std::cout << "------------------------------INGRESE UN COMANDO------------------------------\n" << std::endl;
         std::cout << "--------------------------------exit para salir-------------------------------\n" << std::endl;
         std::cout << ">>";
@@ -55,64 +56,94 @@ void scanner::start()
             std::cout << "--------------------------------exit para salir-------------------------------\n" << std::endl;
             std::cout << ">>";
         }
-    }else if(resp=="2")
-    {
-        string filename("Entrada.txt");
-        vector<string> lines;
-        string line;
-
-        ifstream input_file(filename);
-        if (!input_file.is_open()) {
-            cerr << "Could not open the file - '"
-                << filename << "'" << endl;
-            return;
-        }
-
-        while (getline(input_file, line)){
-            lines.push_back(line);
-        }
-
-        for (const auto &i : lines)
-        {
-            if(i!=""){
-                string texto = i;
-                string tk = token(texto); // mkdisk
-                texto.erase(0,tk.length()+1);
-                vector<string> tks = split_tokens(texto); //[-size=10, -u=m, -path=/home/hola.dk]
-                functions(tk, tks);
-            }
-        }
-
-        input_file.close();
-        return;
-    }
-    
-    
 }
-
+    
 void scanner::functions(string token, vector<string> tks)
 {
     if (compare(token, "MKDISK"))
     {
-        std::cout << "**********MKDISK**********" << std::endl;
+        std::cout << "FUNCION MKDISK" << std::endl;
         disco.mkdisk(tks); // [-size=10, -u=m, -path=/home/hola.dk]
     }else if(compare(token, "RMDISK")){
-        std::cout << "*********RMDISK***********" << std::endl;
+        std::cout << "FUNCION RMDISK" << std::endl;
         disco.rmdisk(tks);
     }else if(compare(token, "FDISK")){
-        std::cout << "*********FDISK***********" << std::endl;
+        std::cout << "FUNCION FDISK" << std::endl;
         disco.fdisk(tks);
     }else if(compare(token, "MOUNT")){
-        std::cout << "*********MOUNT***********" << std::endl;
+        std::cout << "FUNCION MOUNT" << std::endl;
         mount.mount(tks);
     }else if(compare(token, "UNMOUNT")){
-        std::cout << "*********UNMOUNT***********" << std::endl;
+        std::cout << "FUNCION *UNMOUNT" << std::endl;
         mount.unmount(tks);
     }else if(compare(token, "MKFS")){
-        std::cout << "*********MKFS***********" << std::endl;
+        std::cout << "FUNCION MKFS" << std::endl;
         FileSystem fileSystem = FileSystem(mount);
         fileSystem.mkfs(tks);
 
+    }else if(compare(token, "LOGIN")){
+        std::cout << "FUNCION LOGIN" << std::endl;
+        if(logued){
+            shared.handler("LOGIN", " ya existe una sesion abierta");
+            return;
+        }
+        logued = user.login(tks,mount);
+
+    }else if(compare(token, "LOGOUT")){
+        std::cout << "FUNCION LOGOUT" << std::endl;
+        if(!logued){
+            shared.handler("LOGOUT", " debe de iniciar sesion primero");
+            return;
+        }
+        logued = user.logout();
+
+    }else if(compare(token, "MKGRP")){
+        if(!logued){
+            shared.handler("MKGRP", " debe de iniciar sesion primero");
+            return;
+        }
+        std::cout << "FUNCION MKGRP" << std::endl;
+        user.grp(tks,"MK");
+
+    }else if(compare(token, "RMGRP")){
+        if(!logued){
+            shared.handler("RMGRP", " debe de iniciar sesion primero");
+            return;
+        }
+        std::cout << "FUNCION RMGRP" << std::endl;
+        user.grp(tks,"RM");
+
+    }else if(compare(token, "MKUSR")){
+        if(!logued){
+            shared.handler("MKUSR", " debe de iniciar sesion primero");
+            return;
+        }
+        std::cout << "FUNCION MKUSR" << std::endl;
+        user.usr(tks,"MK");
+
+    }else if(compare(token, "RMUSR")){
+        if(!logued){
+            shared.handler("RMUSR", " debe de iniciar sesion primero");
+            return;
+        }
+        std::cout << "FUNCION RMUSR" << std::endl;
+        user.usr(tks,"RM");
+
+    }else if(compare(token, "MKDIR")){
+        if(!logued){
+            shared.handler("MKDIR", " debe de iniciar sesion primero");
+            return;
+        }
+        string p;
+        std::cout << "FUNCION MKDIR" << std::endl;
+        Structs::Partition partition = mount.getmount(user.logged.id, &p);
+        filemanager.mkdir(tks, partition, p);
+    }else if(compare(token, "REP")){
+        std::cout << "FUNCION REPORTES" << std::endl;
+        report.generar(tks, mount);
+    }else if(compare(token, "EXEC")){
+        std::cout << "FUNCION EXEC" << std::endl;
+        funcion_excec(tks);
     }else if(compare(token.substr(0,1),"#")){
         respuesta("COMENTARIO",token);
     }else{
@@ -278,28 +309,32 @@ void scanner::funcion_excec(vector<string> tokens){
 }
 
 void scanner::excec(string path){
-    fstream archivo;
-    string linea;
-    if (!archivo.is_open())
-    {
-        archivo.open(path,ios::in);
-        if (archivo.fail())
-        {
-            errores("EXEC","Error al abrir el archivo");
-        }
-        while (!archivo.eof())
-        {
-            getline(archivo, linea);
-            respuesta("EXEC",linea);
-            if (compare(linea, "E"))
-            {
-                break;
+    string filename(path);
+    vector <string> lines;
+    string line;
+    ifstream input_file(filename);
+    if(!input_file.is_open()){
+        cerr << "No se puede abrir el archivo" << filename << endl;
+        return;
+    }
+    while(getline(input_file,line)){
+        lines.push_back(line);
+    }
+    for(const auto &i:lines){
+        string texto = i;
+        string tk = token(texto);
+        if(texto!=""){
+            if(compare(texto,"PAUSE")){
+                string pause;
+                respuesta("PAUSE","Presione enter para continuar...");
+                getline(cin,pause);
+                continue;
             }
-            string tk = token(linea);
-            linea.erase(0,tk.length()+1);
-            vector<string> tks = split_tokens(linea);
-            functions(tk, tks);
-            std::cout << "**************************" << std::endl;
-        }   
-    } 
+            texto.erase(0,tk.length()+1);
+            vector <string> tks = split_tokens(texto);
+            functions(tk,tks);
+        }
+    }
+    input_file.close();
+    return;
 }
