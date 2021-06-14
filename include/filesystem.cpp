@@ -125,14 +125,13 @@ void FileSystem::ext2(Structs::Superblock spr, Structs::Partition p, int n, stri
     fseek(archivo, p.part_start, SEEK_SET);
     fread(&recuperado, sizeof(Structs::Superblock), 1, archivo);
     fclose(archivo);
-
-    inode.i_uid = 0;
-    inode.i_gid = 0;
+    inode.i_uid = 1;
+    inode.i_gid = 1;
     inode.i_size = 0;
-    inode.i_atime= spr.s_umtime;
-    inode.i_ctime= spr.s_umtime;
-    inode.i_mtime= spr.s_umtime;
-    inode.i_type = 1;
+    inode.i_atime = spr.s_umtime;
+    inode.i_ctime = spr.s_umtime;
+    inode.i_mtime = spr.s_umtime;
+    inode.i_type = 0;
     inode.i_perm = 664;
     inode.i_block[0] = 0;
 
@@ -152,7 +151,7 @@ void FileSystem::ext2(Structs::Superblock spr, Structs::Partition p, int n, stri
     inodetmp.i_atime = spr.s_umtime;
     inodetmp.i_ctime = spr.s_umtime;
     inodetmp.i_mtime = spr.s_umtime;
-    inodetmp.i_type = 0;
+    inodetmp.i_type = 1;
     inodetmp.i_perm = 664;
     inodetmp.i_block[0] = 1;
 
@@ -226,19 +225,19 @@ void FileSystem::ext3(Structs::Superblock spr, Structs::Partition p, int n, stri
     fread(&recuperado, sizeof(Structs::Superblock), 1, archivo);
     fclose(archivo);
 
-    inode.i_uid = 0;
-    inode.i_gid = 0;
+    inode.i_uid = 1;
+    inode.i_gid = 1;
     inode.i_size = 0;
     inode.i_atime = spr.s_umtime;
     inode.i_ctime = spr.s_umtime;
     inode.i_mtime = spr.s_umtime;
-    inode.i_type = 1;
+    inode.i_type = 0;
     inode.i_perm = 664;
     inode.i_block[0] = 0;
 
     strcpy(journaling.content, "carpeta base");
     strcpy(journaling.path, "/");
-    journaling.type = 1;
+    journaling.type = 0;
     strcpy(journaling.operation, "mkdir");
     journaling.date = spr.s_umtime;
 
@@ -258,7 +257,7 @@ void FileSystem::ext3(Structs::Superblock spr, Structs::Partition p, int n, stri
     inodetmp.i_atime = spr.s_umtime;
     inodetmp.i_ctime = spr.s_umtime;
     inodetmp.i_mtime = spr.s_umtime;
-    inodetmp.i_type = 0;
+    inodetmp.i_type = 1;
     inodetmp.i_perm = 664;
     inodetmp.i_block[0] = 1;
 
@@ -267,7 +266,7 @@ void FileSystem::ext3(Structs::Superblock spr, Structs::Partition p, int n, stri
     Structs::Journaling joutmp;
     strcpy(joutmp.content, data.c_str());
     strcpy(joutmp.path, "/user.txt");
-    joutmp.type = 0;
+    joutmp.type = 1;
     joutmp.size = sizeof(data) + sizeof(Structs::Folderblock);
     strcpy(joutmp.operation, "mkfl");
     joutmp.date = spr.s_umtime;

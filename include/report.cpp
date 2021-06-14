@@ -47,10 +47,27 @@ void Report::generar(vector<string> context, Mount m)
         shared.handler("REPORT", " faltan parametros para realizar el reporte");
         return;
     }
-    if(shared.compare(name,"MBR")){
+    if (shared.compare(name, "MBR")) {
         mbr(path, id);
-    }else if(shared.compare(name,"DISk")){
+    } else if (shared.compare(name, "INODE")) {
+        inode(path, id);
+    } else if (shared.compare(name, "BLOCK")) {
+        block(path, id);
+    } else if (shared.compare(name, "BM_INODE")) {
+        bminode(path, id);
+    } else if (shared.compare(name, "BM_BLOCK")) {
+        bmblock(path, id);
+    } else if (shared.compare(name, "SB")) {
+        sb(path, id);
+    } else if (shared.compare(name, "TREE")) {
+        tree(path, id);
+    } else if (shared.compare(name, "DISK")) {
         dks(path, id);
+    } else if (shared.compare(name, "Journaling")) {
+        journaling(path, id);
+    } else {
+        shared.handler("REPORT", "no es un reporte válido");
+        return;
     }
 }
 
@@ -371,6 +388,737 @@ void Report::dks(string p, string id){
         system(function.c_str());
         //function = "rm \"" + pd + "\"";
         //system(function.c_str());
+        shared.response("REPORT", "generado correctamente");
+    } catch (exception &e) {
+        shared.handler("REPORT", e.what());
+    }
+}
+
+void Report::inode(string p, string id) {
+    try {
+        string path;
+        Structs::Superblock spr;
+        Structs::Inodes inode;
+
+        Structs::Partition partition = mount.getmount(id, &path);
+
+        FILE *file = fopen(path.c_str(), "rb+");
+        if (file == NULL) {
+            throw runtime_error("disco no existente");
+        }
+
+        fseek(file, partition.part_start, SEEK_SET);
+        fread(&spr, sizeof(Structs::Superblock), 1, file);
+
+        fseek(file, spr.s_inode_start, SEEK_SET);
+        fread(&inode, sizeof(Structs::Inodes), 1, file);
+
+        int freeI = fileManager.getfree(spr, path, "BI");
+
+        string pd = p.substr(0, p.find('.'));
+        pd += ".dot";
+        FILE *doc = fopen(pd.c_str(), "r");
+        if (doc == NULL) {
+            string cmm = "mkdir -p \"" + pd + "\"";
+            string cmm2 = "rmdir \"" + pd + "\"";
+            system(cmm.c_str());
+            system(cmm2.c_str());
+        } else {
+            fclose(doc);
+        }
+
+        string content;
+        content = "digraph G{\n"
+                  "rankdir=LR;\n"
+                  "graph [ dpi = \"600\" ]; \n"
+                  "forcelabels= true;\n"
+                  "node [shape = plaintext];\n";
+
+        for (int i = 0; i < freeI; ++i) {
+            content += "inode" + to_string(i) + "  [label = <<table>\n"
+                                                "<tr><td COLSPAN = '2' BGCOLOR=\"#145A32\"><font color=\"white\">INODO " +
+                       to_string(i) + "</font></td></tr>\n"
+                                      "<tr><td BGCOLOR=\"#90EE90\">NOMBRE</td><td BGCOLOR=\"#90EE90\" >VALOR</td></tr>\n"
+                                      "<tr>\n"
+                                      "<td>i_uid</td>\n"
+                                      "<td>" +
+                       to_string(inode.i_uid) + "</td>\n"
+                                                "</tr>\n"
+                                                "<tr>\n"
+                                                "<td>i_gid</td>\n"
+                                                "<td>" +
+                       to_string(inode.i_gid) + "</td>\n"
+                                                "</tr>\n"
+                                                "<tr>\n"
+                                                "<td>i_size</td>\n"
+                                                "<td>" +
+                       to_string(inode.i_size) + "</td>\n"
+                                                 "</tr>\n"
+                                                 "<tr>\n"
+                                                 "<td>i_atime</td>\n"
+                                                 "<td>" +
+                       to_string(inode.i_atime) + "</td>\n"
+                                       "</tr>\n"
+                                       "<tr>\n"
+                                       "<td>i_ctime</td>\n"
+                                       "<td>" +
+                       to_string(inode.i_ctime) + "</td>\n"
+                                       "</tr>\n"
+                                       "<tr>\n"
+                                       "<td>i_mtime</td>\n"
+                                       "<td>" +
+                       to_string(inode.i_mtime) + "</td>\n"
+                                       "</tr>\n";
+            for (int j = 0; j < 15; ++j) {
+                content += "<tr>\n"
+                           "<td>i_block_" + to_string(j + 1) + "</td>\n"
+                                                               "<td>" +
+                           to_string(inode.i_block[j]) + "</td>\n"
+                                                         "</tr>\n";
+            }
+            content += "<tr>\n"
+                       "<td>i_type</td>\n"
+                       "<td>" + to_string(inode.i_type) + "</td>\n"
+                                                          "</tr>\n"
+                                                          "<tr>\n"
+                                                          "<td>i_perm</td>\n"
+                                                          "<td>" + to_string(inode.i_perm) + "</td>\n"
+                                                                                             "</tr>\n</table>>];\n";
+            if (i != 0) {
+                content += "inode" + to_string(i - 1) + "-> inode" + to_string(i) + "\n";
+            }
+
+            fread(&inode, sizeof(Structs::Inodes), 1, file);
+        }
+        fclose(file);
+        content += "\n\n}\n";
+        ofstream outfile(pd);
+        outfile << content.c_str() << endl;
+        outfile.close();
+        string function = "dot -Tjpg " + pd + " -o " + p;
+        system(function.c_str());
+        function = "rm \"" + pd + "\"";
+        system(function.c_str());
+        shared.response("REPORT", "generado correctamente");
+    } catch (exception &e) {
+        shared.handler("REPORT", e.what());
+    }
+}
+
+void Report::block(string p, string id) {
+    try {
+        string path;
+        Structs::Superblock spr;
+        Structs::Inodes inodes;
+        Structs::Folderblock fb;
+        Structs::Fileblock flb;
+        Structs::Pointerblock pb;
+
+
+        Structs::Partition partition = mount.getmount(id, &path);
+
+        FILE *file = fopen(path.c_str(), "rb+");
+        if (file == NULL) {
+            throw runtime_error("disco no existente");
+        }
+
+        fseek(file, partition.part_start, SEEK_SET);
+        fread(&spr, sizeof(Structs::Superblock), 1, file);
+
+        fseek(file, spr.s_inode_start, SEEK_SET);
+        fread(&inodes, sizeof(Structs::Inodes), 1, file);
+
+        int freeI = fileManager.getfree(spr, path, "BI");
+
+        string pd = p.substr(0, p.find('.'));
+        pd += ".dot";
+        FILE *doc = fopen(pd.c_str(), "r");
+        if (doc == NULL) {
+            string cmm = "mkdir -p \"" + pd + "\"";
+            string cmm2 = "rmdir \"" + pd + "\"";
+            system(cmm.c_str());
+            system(cmm2.c_str());
+        } else {
+            fclose(doc);
+        }
+
+        string content;
+        content = "digraph G{\n"
+                  "rankdir=LR;\n"
+                  "graph [ dpi = \"600\" ]; \n"
+                  "forcelabels= true;\n"
+                  "node [shape = plaintext];\n";
+        int last = -1;
+        for (int i = 0; i < freeI; ++i) {
+            for (int j = 0; j < 15; ++j) {
+                if (inodes.i_block[j] != -1) {
+                    if (j < 12) {
+                        if (inodes.i_type == 1) {
+                            fseek(file, spr.s_block_start + (sizeof(Structs::Fileblock) * inodes.i_block[j]),
+                                  SEEK_SET);
+                            fread(&flb, sizeof(Structs::Fileblock), 1, file);
+                            content += "BLOCK" + to_string(inodes.i_block[j]) + " [label = <<table >\n"
+                                                                                "<tr><td COLSPAN = '2' BGCOLOR=\"#145A32\"><font color=\"white\">BLOCK " +
+                                       to_string(inodes.i_block[j]) +
+                                       "</font></td></tr>\n <tr><td COLSPAN = '2'>" + flb.b_content +
+                                       "</td></tr>\n</table>>];\n";
+                            if (last != -1) {
+                                content += "BLOCK" + to_string(last) + "-> BLOCK" + to_string(inodes.i_block[j]) + "\n";
+                            }
+                            last = inodes.i_block[j];
+                        } else {
+                            fseek(file, spr.s_block_start + (sizeof(Structs::Folderblock) * inodes.i_block[j]),
+                                  SEEK_SET);
+                            fread(&fb, sizeof(Structs::Fileblock), 1, file);
+                            content += "BLOCK" + to_string(inodes.i_block[j]) + "  [label = <<table>\n"
+                                                                                "<tr><td COLSPAN = '2' BGCOLOR=\"#145A32\"><font color=\"white\">BLOCK " +
+                                       to_string(inodes.i_block[j]) + "</font></td></tr>\n"
+                                                                      "<tr><td BGCOLOR=\"#90EE90\">B_NAME</td><td BGCOLOR=\"#90EE90\" >B_INODO</td></tr>\n";
+                            for (int k = 0; k < 4; ++k) {
+                                string ctmp;
+                                ctmp += fb.b_content[k].b_name;
+                                content += "<tr>\n"
+                                           "<td>" + ctmp + "</td>\n"
+                                                           "<td>" +
+                                           to_string(fb.b_content[k].b_inodo) + "</td>\n"
+                                                                                "</tr>\n";
+                            }
+                            content += "</table>>];\n";
+                            if (last != -1) {
+                                content += "BLOCK" + to_string(last) + "-> BLOCK" + to_string(inodes.i_block[j]) + "\n";
+                            }
+                            last = inodes.i_block[j];
+                        }
+                    }
+                }
+            }
+            fseek(file, spr.s_inode_start + (sizeof(Structs::Inodes) * (i + 1)), SEEK_SET);
+            fread(&inodes, sizeof(Structs::Inodes), 1, file);
+        }
+        fclose(file);
+        content += "\n\n}\n";
+        ofstream outfile(pd);
+        outfile << content.c_str() << endl;
+        outfile.close();
+        string function = "dot -Tjpg " + pd + " -o " + p;
+        system(function.c_str());
+        function = "rm \"" + pd + "\"";
+        system(function.c_str());
+        shared.response("REPORT", "generado correctamente");
+    } catch (exception &e) {
+        shared.handler("REPORT", e.what());
+    }
+}
+
+void Report::bminode(string p, string id) {
+    try {
+        string path;
+        Structs::Superblock spr;
+        int size;
+        Structs::Partition partition = mount.getmount(id, &path);
+
+        FILE *file = fopen(path.c_str(), "rb+");
+        if (file == NULL) {
+            throw runtime_error("disco no existente");
+        }
+
+        fseek(file, partition.part_start, SEEK_SET);
+        fread(&spr, sizeof(Structs::Superblock), 1, file);
+        size = spr.s_inodes_count;
+
+        string pd = p.substr(0, p.find('.'));
+        pd += ".txt";
+        FILE *doc = fopen(pd.c_str(), "r");
+        if (doc == NULL) {
+            string cmm = "mkdir -p \"" + pd + "\"";
+            string cmm2 = "rmdir \"" + pd + "\"";
+            system(cmm.c_str());
+            system(cmm2.c_str());
+        } else {
+            fclose(doc);
+        }
+
+        string content;
+        char ch = 'x';
+        int count = 0;
+        fseek(file, spr.s_bm_inode_start, SEEK_SET);
+        for (int i = 0; i < spr.s_inodes_count; i++) {
+            fread(&ch, sizeof(ch), 1, file);
+            if (count < 19) {
+                content += ch;
+                count++;
+            } else {
+                content += ch;
+                content += "\n";
+                count = 0;
+            }
+        }
+        fclose(file);
+        ofstream outfile(pd);
+        outfile << content.c_str() << endl;
+        outfile.close();
+        shared.response("REPORT", "generado correctamente");
+    } catch (exception &e) {
+        shared.handler("REPORT", e.what());
+    }
+}
+
+void Report::bmblock(string p, string id) {
+    try {
+        string path;
+        Structs::Superblock spr;
+        int size;
+        Structs::Partition partition = mount.getmount(id, &path);
+
+        FILE *file = fopen(path.c_str(), "rb+");
+        if (file == NULL) {
+            throw runtime_error("disco no existente");
+        }
+
+        fseek(file, partition.part_start, SEEK_SET);
+        fread(&spr, sizeof(Structs::Superblock), 1, file);
+
+
+        string pd = p.substr(0, p.find('.'));
+        pd += ".txt";
+        FILE *doc = fopen(pd.c_str(), "r");
+        if (doc == NULL) {
+            string cmm = "mkdir -p \"" + pd + "\"";
+            string cmm2 = "rmdir \"" + pd + "\"";
+            system(cmm.c_str());
+            system(cmm2.c_str());
+        } else {
+            fclose(doc);
+        }
+
+        string content;
+        char ch = 'x';
+        int count = 0;
+        fseek(file, spr.s_bm_block_start, SEEK_SET);
+        for (int i = 0; i < spr.s_blocks_count; i++) {
+            fread(&ch, sizeof(ch), 1, file);
+            if (count < 19) {
+                content += ch;
+                count++;
+            } else {
+                content += ch;
+                content += "\n";
+                count = 0;
+            }
+        }
+        fclose(file);
+        ofstream outfile(pd);
+        outfile << content.c_str() << endl;
+        outfile.close();
+        shared.response("REPORT", "generado correctamente");
+    } catch (exception &e) {
+        shared.handler("REPORT", e.what());
+    }
+}
+
+void Report::sb(string p, string id) {
+    try {
+        string path;
+        Structs::Superblock spr;
+        int size;
+        Structs::Partition partition = mount.getmount(id, &path);
+
+        FILE *file = fopen(path.c_str(), "rb+");
+        if (file == NULL) {
+            throw runtime_error("disco no existente");
+        }
+
+        fseek(file, partition.part_start, SEEK_SET);
+        fread(&spr, sizeof(Structs::Superblock), 1, file);
+        fclose(file);
+
+        string pd = p.substr(0, p.find('.'));
+        pd += ".dot";
+        FILE *doc = fopen(pd.c_str(), "r");
+        if (doc == NULL) {
+            string cmm = "mkdir -p \"" + pd + "\"";
+            string cmm2 = "rmdir \"" + pd + "\"";
+            system(cmm.c_str());
+            system(cmm2.c_str());
+        } else {
+            fclose(doc);
+        }
+
+        string content;
+        content = "digraph G{\n"
+                  "rankdir=TB;\n"
+                  "graph [ dpi = \"600\" ]; \n"
+                  "forcelabels= true;\n"
+                  "node [shape = plaintext];\n"
+                  "general [label = <<table>\n"
+                  "<tr><td COLSPAN = '2' BGCOLOR=\"#145A32\"><font color=\"white\">SUPERBLOCK</font></td></tr>\n"
+                  "<tr><td BGCOLOR=\"#90EE90\">NOMBRE</td><td BGCOLOR=\"#90EE90\" >VALOR</td></tr>\n"
+                  "<tr>\n"
+                  "<td>s_inodes_count</td>\n"
+                  "<td>" +
+                  to_string(spr.s_inodes_count) + "</td>\n"
+                                                  "</tr>\n"
+                                                  "<tr>\n"
+                                                  "<td>s_blocks_count</td>\n"
+                                                  "<td>" +
+                  to_string(spr.s_blocks_count) + "</td>\n"
+                                                  "</tr>\n"
+                                                  "<tr>\n"
+                                                  "<td>s_free_blocks_count</td>\n"
+                                                  "<td>" +
+                  to_string(spr.s_free_blocks_count) + "</td>\n"
+                                                       "</tr>\n"
+                                                       "<tr>\n"
+                                                       "<td>s_free_inodes_count</td>\n"
+                                                       "<td>" +
+                  to_string(spr.s_free_inodes_count) + "</td>\n"
+                                                       "</tr>\n"
+                                                       "<tr>\n"
+                                                       "<td>s_mtime</td>\n"
+                                                       "<td>" +
+                  to_string(spr.s_mtime) + "</td>\n"
+                                "</tr>\n"
+                                "<tr>\n"
+                                "<td>s_umtime</td>\n"
+                                "<td>" +
+                  to_string(spr.s_umtime) + "</td>\n"
+                                 "</tr>\n"
+                                 "<tr>\n"
+                                 "<td>s_mnt_count</td>\n"
+                                 "<td>" +
+                  to_string(spr.s_mnt_count) + "</td>\n"
+                                               "</tr>\n"
+                                               "<tr>\n"
+                                               "<td>s_magic</td>\n"
+                                               "<td>" +
+                  to_string(spr.s_magic) + "</td>\n"
+                                           "</tr>\n"
+                                           "<tr>\n"
+                                           "<td>s_inode_size</td>\n"
+                                           "<td>" +
+                  to_string(spr.s_inode_size) + "</td>\n"
+                                                "</tr>\n"
+                                                "<tr>\n"
+                                                "<td>s_block_size</td>\n"
+                                                "<td>" +
+                  to_string(spr.s_block_size) + "</td>\n"
+                                                "</tr>\n"
+                                                "<tr>\n"
+                                                "<td>s_first_ino</td>\n"
+                                                "<td>" +
+                  to_string(spr.s_fist_ino) + "</td>\n"
+                                              "</tr>\n"
+                                              "<tr>\n"
+                                              "<td>s_first_blo</td>\n"
+                                              "<td>" +
+                  to_string(spr.s_first_blo) + "</td>\n"
+                                               "</tr>\n"
+                                               "<tr>\n"
+                                               "<td>s_bm_inode_start</td>\n"
+                                               "<td>" +
+                  to_string(spr.s_bm_inode_start) + "</td>\n"
+                                                    "</tr>\n"
+                                                    "<tr>\n"
+                                                    "<td>s_bm_block_start</td>\n"
+                                                    "<td>" +
+                  to_string(spr.s_bm_block_start) + "</td>\n"
+                                                    "</tr>\n"
+                                                    "<tr>\n"
+                                                    "<td>s_inode_start</td>\n"
+                                                    "<td>" +
+                  to_string(spr.s_inode_start) + "</td>\n"
+                                                 "</tr>\n"
+                                                 "<tr>\n"
+                                                 "<td>s_block_start</td>\n"
+                                                 "<td>" +
+                  to_string(spr.s_block_start) + "</td>\n"
+                                                 "</tr>\n";
+
+        content += "</table>>];";
+        content += "\n\n}\n";
+        ofstream outfile(pd);
+        outfile << content.c_str() << endl;
+        outfile.close();
+        string function = "dot -Tjpg " + pd + " -o " + p;
+        system(function.c_str());
+        function = "rm \"" + pd + "\"";
+        system(function.c_str());
+        shared.response("REPORT", "generado correctamente");
+    } catch (exception &e) {
+        shared.handler("REPORT", e.what());
+    }
+}
+
+void Report::tree(string p, string id) {
+    try {
+        string path;
+        Structs::Superblock spr;
+        Structs::Inodes inode;
+
+        Structs::Partition partition = mount.getmount(id, &path);
+
+        FILE *file = fopen(path.c_str(), "rb+");
+        if (file == NULL) {
+            throw runtime_error("disco no existente");
+        }
+
+        fseek(file, partition.part_start, SEEK_SET);
+        fread(&spr, sizeof(Structs::Superblock), 1, file);
+
+        fseek(file, spr.s_inode_start, SEEK_SET);
+        fread(&inode, sizeof(Structs::Inodes), 1, file);
+
+        int freeI = fileManager.getfree(spr, path, "BI");
+
+        string pd = p.substr(0, p.find('.'));
+        pd += ".dot";
+        FILE *doc = fopen(pd.c_str(), "r");
+        if (doc == NULL) {
+            string cmm = "mkdir -p \"" + pd + "\"";
+            string cmm2 = "rmdir \"" + pd + "\"";
+            system(cmm.c_str());
+            system(cmm2.c_str());
+        } else {
+            fclose(doc);
+        }
+
+        string content;
+        content = "digraph G{\n"
+                  "rankdir=LR;\n"
+                  "graph [ dpi = \"600\" ]; \n"
+                  "forcelabels= true;\n"
+                  "node [shape = plaintext];\n";
+
+        for (int i = 0; i < freeI; ++i) {
+            content += "inode" + to_string(i) + "  [label = <<table>\n"
+                                                "<tr><td COLSPAN = '2' BGCOLOR=\"#000080\"><font color=\"white\">INODO " +
+                       to_string(i) + "</font></td></tr>\n"
+                                      "<tr><td BGCOLOR=\"#87CEFA\">NOMBRE</td><td BGCOLOR=\"#87CEFA\" >VALOR</td></tr>\n"
+                                      "<tr>\n"
+                                      "<td>i_uid</td>\n"
+                                      "<td>" +
+                       to_string(inode.i_uid) + "</td>\n"
+                                                "</tr>\n"
+                                                "<tr>\n"
+                                                "<td>i_gid</td>\n"
+                                                "<td>" +
+                       to_string(inode.i_gid) + "</td>\n"
+                                                "</tr>\n"
+                                                "<tr>\n"
+                                                "<td>i_size</td>\n"
+                                                "<td>" +
+                       to_string(inode.i_size) + "</td>\n"
+                                                 "</tr>\n"
+                                                 "<tr>\n"
+                                                 "<td>i_atime</td>\n"
+                                                 "<td>" +
+                       to_string(inode.i_atime) + "</td>\n"
+                                       "</tr>\n"
+                                       "<tr>\n"
+                                       "<td>i_ctime</td>\n"
+                                       "<td>" +
+                       to_string(inode.i_ctime) + "</td>\n"
+                                       "</tr>\n"
+                                       "<tr>\n"
+                                       "<td>i_mtime</td>\n"
+                                       "<td>" +
+                       to_string(inode.i_mtime) + "</td>\n"
+                                       "</tr>\n";
+            for (int j = 0; j < 15; ++j) {
+                content += "<tr>\n"
+                           "<td>i_block_" + to_string(j + 1) + "</td>\n"
+                                                               "<td port=\"" + to_string(j) + "\">" +
+                           to_string(inode.i_block[j]) + "</td>\n"
+                                                         "</tr>\n";
+            }
+            content += "<tr>\n"
+                       "<td>i_type</td>\n"
+                       "<td>" + to_string(inode.i_type) + "</td>\n"
+                                                          "</tr>\n"
+                                                          "<tr>\n"
+                                                          "<td>i_perm</td>\n"
+                                                          "<td>" + to_string(inode.i_perm) + "</td>\n"
+                                                                                             "</tr>\n</table>>];\n";
+            if (inode.i_type == 0) {
+                for (int j = 0; j < 15; j++) {
+                    if (inode.i_block[j] != -1) {
+                        content +=
+                                "inode" + to_string(i) + ":" + to_string(j) + "-> BLOCK" + to_string(inode.i_block[j]) +
+                                "\n";
+
+                        Structs::Folderblock foldertmp;
+                        fseek(file, spr.s_block_start + (sizeof(Structs::Folderblock) * inode.i_block[j]),
+                              SEEK_SET);
+                        fread(&foldertmp, sizeof(Structs::Folderblock), 1, file);
+
+                        content += "BLOCK" + to_string(inode.i_block[j]) + "  [label = <<table>\n"
+                                                                           "<tr><td COLSPAN = '2' BGCOLOR=\"#145A32\"><font color=\"white\">BLOCK " +
+                                   to_string(inode.i_block[j]) + "</font></td></tr>\n"
+                                                                 "<tr><td BGCOLOR=\"#90EE90\">B_NAME</td><td BGCOLOR=\"#90EE90\" >B_INODO</td></tr>\n";
+                        for (int k = 0; k < 4; ++k) {
+                            string ctmp;
+                            ctmp += foldertmp.b_content[k].b_name;
+                            content += "<tr>\n"
+                                       "<td>" + ctmp + "</td>\n"
+                                                       "<td port=\"" + to_string(k) + "\">" +
+                                       to_string(foldertmp.b_content[k].b_inodo) + "</td>\n"
+                                                                                   "</tr>\n";
+                        }
+                        content += "</table>>];\n";
+
+                        for (int b = 0; b < 4; b++) { //VER SI ELIMINO
+                            if (foldertmp.b_content[b].b_inodo != -1) {
+                                string nm(foldertmp.b_content[b].b_name);
+                                if (!((nm == ".") || (nm == ".."))) {
+                                    content +=
+                                            "BLOCK" + to_string(inode.i_block[j]) + ":" + to_string(b) + " -> inode" +
+                                            to_string(foldertmp.b_content[b].b_inodo) + ";\n";
+                                }
+                            }
+                        }
+
+                        if (j > 11) {
+                            //Metodo para graficar bloques indirectos
+                        }
+                    }
+                }
+            } else {
+                for (int j = 0; j < 15; j++) {
+                    if (inode.i_block[j] != -1) {
+                        if (j < 12) {
+                            content +=
+                                    "inode" + to_string(i) + ":" + to_string(j) + "-> BLOCK" +
+                                    to_string(inode.i_block[j]) +
+                                    "\n";
+                            Structs::Fileblock filetmp;
+                            fseek(file, spr.s_block_start + (sizeof(Structs::Fileblock) * inode.i_block[j]),
+                                  SEEK_SET);
+                            fread(&filetmp, sizeof(Structs::Fileblock), 1, file);
+
+                            content += "BLOCK" + to_string(inode.i_block[j]) + " [label = <<table >\n"
+                                                                               "<tr><td COLSPAN = '2' BGCOLOR=\"#CCCC00\">BLOCK " +
+                                       to_string(inode.i_block[j]) +
+                                       "</td></tr>\n <tr><td COLSPAN = '2'>" + filetmp.b_content +
+                                       "</td></tr>\n</table>>];\n";
+                        }
+                    }
+                }
+            }
+            fseek(file, spr.s_inode_start + (sizeof(Structs::Inodes) * (i + 1)), SEEK_SET);
+            fread(&inode, sizeof(Structs::Inodes), 1, file);
+        }
+        fclose(file);
+        content += "\n\n}\n";
+
+        ofstream outfile(pd);
+        outfile << content.c_str() << endl;
+        outfile.close();
+        string function = "dot -Tjpg " + pd + " -o " + p;
+        system(function.c_str());
+        function = "rm \"" + pd + "\"";
+        system(function.c_str());
+        shared.response("REPORT", "generado correctamente");
+    } catch (exception &e) {
+        shared.handler("REPORT", e.what());
+    }
+}
+
+void Report::journaling(string p, string id) {
+    try {
+        string path;
+        Structs::Superblock spr;
+        Structs::Journaling journaling;
+
+        Structs::Partition partition = mount.getmount(id, &path);
+
+        FILE *file = fopen(path.c_str(), "rb+");
+        if (file == NULL) {
+            throw runtime_error("disco no existente");
+        }
+
+        fseek(file, spr.s_inode_start, SEEK_SET);
+        fread(&spr, sizeof(Structs::Superblock), 1, file);
+        if (spr.s_filesystem_type == 2) {
+            throw runtime_error("sistema no válido");
+        }
+
+        fseek(file, partition.part_start + sizeof(Structs::Superblock), SEEK_SET);
+        fread(&journaling, sizeof(Structs::Inodes), 1, file);
+
+        string pd = p.substr(0, p.find('.'));
+        pd += ".dot";
+        FILE *doc = fopen(pd.c_str(), "r");
+        if (doc == NULL) {
+            string cmm = "mkdir -p \"" + pd + "\"";
+            string cmm2 = "rmdir \"" + pd + "\"";
+            system(cmm.c_str());
+            system(cmm2.c_str());
+        } else {
+            fclose(doc);
+        }
+
+        string content;
+        content = "digraph G{\n"
+                  "rankdir=LR;\n"
+                  "graph [ dpi = \"600\" ]; \n"
+                  "forcelabels= true;\n"
+                  "node [shape = plaintext];\n";
+        int i = 0;
+        do {
+            if (journaling.type == -1){
+                break;
+            }
+            content += "jor" + to_string(i) + "  [label = <<table>\n"
+                                                "<tr><td COLSPAN = '2' BGCOLOR=\"#145A32\"><font color=\"white\">JOURNALING " +
+                       to_string(i) + "</font></td></tr>\n"
+                                      "<tr><td BGCOLOR=\"#90EE90\">NOMBRE</td><td BGCOLOR=\"#90EE90\" >VALOR</td></tr>\n"
+                                      "<tr>\n"
+                                      "<td>operation</td>\n"
+                                      "<td>" +
+                       journaling.operation + "</td>\n"
+                                                "</tr>\n"
+                                                "<tr>\n"
+                                                "<td>type</td>\n"
+                                                "<td>" +
+                       to_string(journaling.type) + "</td>\n"
+                                                "</tr>\n"
+                                                "<tr>\n"
+                                                "<td>path</td>\n"
+                                                "<td>" +
+                       journaling.path + "</td>\n"
+                                                 "</tr>\n"
+                                                 "<tr>\n"
+                                                 "<td>content</td>\n"
+                                                 "<td>" +
+                    journaling.content + "</td>\n"
+                                       "</tr>\n"
+                                       "<tr>\n"
+                                       "<td>date</td>\n"
+                                       "<td>" +
+                    to_string(journaling.date) + "</td>\n"
+                                       "</tr>\n"
+                                       "<tr>\n"
+                                       "<td>size</td>\n"
+                                       "<td>" +
+                    to_string(journaling.size)  + "</td>\n"
+                                       "</tr>\n</table>>];\n";
+       
+            
+            if (i != 0) {
+                content += "jor" + to_string(i - 1) + "-> jor" + to_string(i) + "\n";
+            }
+            i++;
+            fread(&journaling, sizeof(Structs::Journaling), 1, file);
+        } while (true);
+        fclose(file);
+        content += "\n\n}\n";
+        ofstream outfile(pd);
+        outfile << content.c_str() << endl;
+        outfile.close();
+        string function = "dot -Tjpg " + pd + " -o " + p;
+        system(function.c_str());
+        function = "rm \"" + pd + "\"";
+        system(function.c_str());
         shared.response("REPORT", "generado correctamente");
     } catch (exception &e) {
         shared.handler("REPORT", e.what());
