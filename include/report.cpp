@@ -97,8 +97,8 @@ void Report::mbr(string p, string id) {
                   "forcelabels= true;\n"
                   "node [shape = plaintext];\n"
                   "general [label = <<table>\n"
-                  "<tr><td COLSPAN = '2' BGCOLOR=\"#145A32\"><font color=\"white\">MBR</font></td></tr>\n"
-                  "<tr><td BGCOLOR=\"#90EE90\">NOMBRE</td><td BGCOLOR=\"#90EE90\" >VALOR</td></tr>\n"
+                  "<tr><td COLSPAN = '2' BGCOLOR=\"#102027\"><font color=\"white\">MBR</font></td></tr>\n"
+                  "<tr><td BGCOLOR=\"#ff6f00\">NOMBRE</td><td BGCOLOR=\"#ff6f00\" >VALOR</td></tr>\n"
                   "<tr>\n"
                   "<td>mbr_tamaño</td>\n"
                   "<td>" +
@@ -107,7 +107,7 @@ void Report::mbr(string p, string id) {
                                                "<tr>\n"
                                                "<td>mbr_fecha_creación</td>\n"
                                                "<td>" +
-                  string("",disco.mbr_fecha_creacion) + "</td>\n"
+                  string(mostrar_fecha) + "</td>\n"
                                                     "</tr>\n"
                                                     "<tr>\n"
                                                     "<td>mbr_disk_signature</td>\n"
@@ -165,10 +165,10 @@ void Report::mbr(string p, string id) {
             vector<Structs::EBR> ebrs = disk.getlogics(extended, path);
             for (Structs::EBR ebr : ebrs) {
                 content += "<tr><td BORDER=\"0\"></td><td BORDER=\"0\"></td></tr>"
-                           "<tr><td COLSPAN = '2' BGCOLOR=\"#145A32\"><font color=\"white\">EBR_" +
+                           "<tr><td COLSPAN = '2' BGCOLOR=\"#102027\"><font color=\"white\">EBR_" +
                            to_string(count + 1) +
                            "</font></td></tr>\n"
-                           "<tr><td BGCOLOR=\"#90EE90\">NOMBRE</td><td BGCOLOR=\"#90EE90\" >VALOR</td></tr>\n"
+                           "<tr><td BGCOLOR=\"#ff6f00\">NOMBRE</td><td BGCOLOR=\"#ff6f00\" >VALOR</td></tr>\n"
                            "<tr>\n"
                            "<td>part_status_" + to_string(count + 1) + "</td>\n"
                                                                        "<td>" +
@@ -376,6 +376,3 @@ void Report::dks(string p, string id){
         shared.handler("REPORT", e.what());
     }
 }
-
-
-

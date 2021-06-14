@@ -113,12 +113,7 @@ void Disk::makeDisk(string s, string f, string u, string path){
             size = 1024*size;
         }
         f = f.substr(0,1);
-        //time_t t = time(0);
-        //char fechayhora[20];
-        //struct tm *tm = localtime(&t);
-        //strftime(fechayhora, 20, "%Y/%m/%d %H:%M:%S", tm);
         disco.mbr_tamano = size;
-        //strcpy(disco.mbr_fecha_creacion, fechayhora);
         disco.mbr_fecha_creacion = time(nullptr);
         disco.disk_fit = toupper(f[0]);
         disco.mbr_disk_signature = rand() % 9999 + 100;
@@ -130,6 +125,11 @@ void Disk::makeDisk(string s, string f, string u, string path){
             fclose(validar);
             return;
         }
+        disco.mbr_Partition_1 = Structs::Partition();
+        disco.mbr_Partition_2 = Structs::Partition();
+        disco.mbr_Partition_3 = Structs::Partition();
+        disco.mbr_Partition_4 = Structs::Partition();
+
         string path2 = path;
         if (path.substr(0, 1) == "\"")
         {
@@ -923,6 +923,3 @@ void Disk::addpartition(string add, string u, string n, string p) {
     }
 
 }
-
-
-

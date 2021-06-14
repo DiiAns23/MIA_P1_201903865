@@ -17,6 +17,8 @@ class Report {
     void generar(vector<string> context, Mount m);
     void mbr(string p, string id);
     void dks(string p, string id);
+    void tree(string p, string id);
+    void inodo(string p, string id);
     private:
     Shared shared;
     Disk disk;
