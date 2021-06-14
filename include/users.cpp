@@ -151,28 +151,10 @@ void Users::mkgrp(string n) {
         Structs::Partition partition = mount.getmount(logged.id, &path);
 
         Structs::Superblock super;
-        Structs::Folderblock folder;
-        Structs::Inodes inode;
-        Structs::Inodes tmp;
-        Structs::Fileblock datos;
         FILE *rfile = fopen(path.c_str(), "rb+");
         fseek(rfile, partition.part_start, SEEK_SET);
         fread(&super, sizeof(Structs::Superblock), 1, rfile);
 
-        fseek(rfile,super.s_inode_start,SEEK_SET);
-        fread(&inode, sizeof(Structs::Inodes),1,rfile);
-        string text;
-        if(inode.i_block[0] != -1){
-            folder = Structs::Folderblock();
-            datos = Structs::Fileblock();
-            tmp = Structs::Inodes();
-            fseek(rfile, super.s_block_start + (sizeof(Structs::Folderblock) * inode.i_block[0]), SEEK_SET);
-            fread(&folder, sizeof(Structs::Folderblock), 1, rfile);
-            fseek(rfile,super.s_block_start + (sizeof(Structs::Inodes)* (folder.b_content[2].b_inodo+1)),SEEK_SET);
-            fread(&tmp,sizeof(Structs::Inodes),1,rfile);
-            cout<< tmp.i_block[0] << endl;
-        }
-        
         Structs::Fileblock fb;
         fseek(rfile, super.s_block_start + sizeof(Structs::Folderblock), SEEK_SET);
         fread(&fb, sizeof(Structs::Fileblock), 1, rfile);
@@ -197,7 +179,6 @@ void Users::mkgrp(string n) {
         }
         txt += to_string(c + 1) + ",G," + n + "\n";
         strcpy(fb.b_content, txt.c_str());
-
         fseek(rfile, super.s_block_start + sizeof(Structs::Folderblock), SEEK_SET);
         fwrite(&fb, sizeof(Structs::Fileblock), 1, rfile);
         fclose(rfile);
