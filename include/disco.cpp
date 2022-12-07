@@ -135,14 +135,14 @@ void Disk::makeDisk(string s, string f, string u, string path){
         {
             path = path.substr(1, path.length() - 2);
         }
-        if(!scan.compare(path.substr(path.find_last_of(".") + 1),"dk")){
-            scan.errores("MKDISK", "Extensión de archivo no valida");
+        if(!scan.compare(path.substr(path.find_last_of(".") + 3),"txt")){
+            scan.errores("MKDISK", "Extensión de archivo no valida, F");
             return;
         }
         
         try
         {
-            FILE *file = fopen(path.c_str(), "w+b");
+            FILE *file = fopen(path.c_str(), "w+b"); /// Ruta: home/diians23/Documentos/Documentos/Hola/Discos/Discos2/disco1.dks
             if (file!=NULL)
             {
                 fwrite("\0", 1, 1, file);
